@@ -1,0 +1,1434 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>嫩芽任務</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* ===================== Design tokens ===================== */
+:root{
+  color-scheme: light;
+  --bg:#eaf4e4;
+  --bg-2:#dcedd4;
+  --surface:#fbfaf1;
+  --surface-2:#eef3e2;
+  --ink:#20331f;
+  --ink-soft:#4f6a4d;
+  --muted:#8a9a86;
+  --border:rgba(32,51,31,0.14);
+  --bark:#8a6138;
+  --bark-dark:#5c4025;
+  --bark-ink:#fbf3e6;
+  --sun:#f2b705;
+  --topic-vocab:#1baf7a;
+  --topic-dative:#2a78d6;
+  --topic-why:#eb6834;
+  --topic-becauseso:#c98500;
+  --topic-mixed:#8659a8;
+  --status-good:#0ca30c;
+  --status-warning:#c98100;
+  --status-serious:#c65a36;
+  --status-critical:#c23f3f;
+  --shadow: 0 10px 24px rgba(32,51,31,0.14);
+  --font-display:'Baloo 2','Noto Sans TC',sans-serif;
+  --font-body:'Noto Sans TC','Baloo 2',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#0f1d13;
+    --bg-2:#132518;
+    --surface:#1b2c1f;
+    --surface-2:#213524;
+    --ink:#eaf4e4;
+    --ink-soft:#b7c9b3;
+    --muted:#87977f;
+    --border:rgba(234,244,228,0.14);
+    --bark:#c99a68;
+    --bark-dark:#8a6640;
+    --bark-ink:#2a1c10;
+    --sun:#f7c531;
+    --topic-vocab:#28c98a;
+    --topic-dative:#5b97e8;
+    --topic-why:#f08a52;
+    --topic-becauseso:#e0a233;
+    --topic-mixed:#a682c9;
+    --status-good:#3fca4c;
+    --status-warning:#e0a233;
+    --status-serious:#e0835f;
+    --status-critical:#e2645f;
+    --shadow: 0 10px 26px rgba(0,0,0,0.45);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0f1d13;
+  --bg-2:#132518;
+  --surface:#1b2c1f;
+  --surface-2:#213524;
+  --ink:#eaf4e4;
+  --ink-soft:#b7c9b3;
+  --muted:#87977f;
+  --border:rgba(234,244,228,0.14);
+  --bark:#c99a68;
+  --bark-dark:#8a6640;
+  --bark-ink:#2a1c10;
+  --sun:#f7c531;
+  --topic-vocab:#28c98a;
+  --topic-dative:#5b97e8;
+  --topic-why:#f08a52;
+  --topic-becauseso:#e0a233;
+  --topic-mixed:#a682c9;
+  --status-good:#3fca4c;
+  --status-warning:#e0a233;
+  --status-serious:#e0835f;
+  --status-critical:#e2645f;
+  --shadow: 0 10px 26px rgba(0,0,0,0.45);
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 0%, color-mix(in srgb, var(--topic-vocab) 16%, transparent), transparent),
+    radial-gradient(ellipse 55% 35% at 100% 10%, color-mix(in srgb, var(--sun) 18%, transparent), transparent),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+  color:var(--ink);
+  font-family:var(--font-body);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:var(--font-display); text-wrap:balance; margin:0;}
+p{margin:0;}
+button{font-family:inherit;}
+::selection{background:var(--topic-vocab); color:#fff;}
+a{color:var(--topic-dative);}
+
+.hidden{display:none !important;}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+
+/* ===================== Background decoration ===================== */
+.bg-hills{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;}
+.bg-hills svg{position:absolute; bottom:-2px; left:0; width:100%; min-width:900px; height:auto;}
+.leaf{position:absolute; top:-10%; font-size:1.4rem; opacity:.55; animation:leafFall linear infinite;}
+@keyframes leafFall{
+  0%{transform:translateY(-10vh) rotate(0deg); opacity:.75;}
+  100%{transform:translateY(115vh) rotate(340deg); opacity:0;}
+}
+@media (prefers-reduced-motion: reduce){ .leaf{animation:none; display:none;} }
+
+/* ===================== App shell ===================== */
+#app{position:relative; z-index:1; max-width:1080px; margin:0 auto; padding:14px 16px calc(96px + env(safe-area-inset-bottom)); min-height:100vh;}
+
+.topbar{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:10px 14px; border-radius:20px; background:var(--surface); box-shadow:var(--shadow);
+  border:1px solid var(--border);
+  position:sticky; top:10px; z-index:20;
+}
+.brand{display:flex; align-items:center; gap:8px; font-family:var(--font-display); font-weight:700; font-size:1.05rem; color:var(--ink);}
+.brand svg{width:34px; height:34px; flex:none;}
+.stats-pill{display:flex; align-items:center; gap:12px; font-weight:700; font-size:0.85rem; color:var(--ink-soft); font-variant-numeric:tabular-nums;}
+.stats-pill b{color:var(--ink); font-family:var(--font-display);}
+.gear-btn{border:none; background:var(--surface-2); color:var(--ink-soft); width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; transition:transform .15s;}
+.gear-btn:hover{transform:rotate(25deg);}
+
+/* ===================== Bottom Tab Bar ===================== */
+.tabbar{
+  position:fixed; left:0; right:0; bottom:0; z-index:30;
+  display:flex; justify-content:center; gap:6px;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg, transparent, var(--bg-2) 30%);
+}
+.tabbar-inner{
+  display:flex; gap:4px; background:var(--bark); border:2px solid var(--bark-dark); border-radius:22px;
+  padding:6px; box-shadow:var(--shadow); max-width:640px; width:100%; overflow-x:auto;
+}
+.tab-btn{
+  flex:1 1 0; min-width:58px; display:flex; flex-direction:column; align-items:center; gap:2px;
+  background:transparent; border:none; border-radius:16px; padding:7px 4px; cursor:pointer;
+  color:var(--bark-ink); opacity:.72; font-weight:700; font-size:.66rem;
+  transition:background .15s, opacity .15s, transform .15s;
+}
+.tab-btn .ic{font-size:1.25rem; line-height:1;}
+.tab-btn.active{background:rgba(255,255,255,0.22); opacity:1; transform:translateY(-2px);}
+.tab-btn:active{transform:scale(.94);}
+
+/* ===================== Screens ===================== */
+.screen{display:none; animation:popIn .25s ease-out;}
+.screen.active{display:block;}
+@keyframes popIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+@media (prefers-reduced-motion: reduce){ .screen{animation:none;} }
+
+.panel{
+  background:var(--surface); border-radius:24px; border:1px solid var(--border);
+  box-shadow:var(--shadow); padding:20px; margin-bottom:16px;
+}
+.section-title{display:flex; align-items:center; gap:8px; font-size:1.25rem; margin-bottom:4px;}
+.section-sub{color:var(--ink-soft); font-size:.88rem; margin-bottom:14px;}
+
+/* ===================== Onboarding ===================== */
+.onboard-card{max-width:520px; margin:6vh auto 0; text-align:center;}
+.onboard-sprite{width:120px; height:120px; margin:0 auto 8px;}
+.onboard-card h1{font-size:1.6rem; margin-bottom:6px;}
+.onboard-card p.lead{color:var(--ink-soft); margin-bottom:20px; font-size:.92rem;}
+.field{text-align:left; margin-bottom:18px;}
+.field label{display:block; font-weight:700; margin-bottom:6px; font-size:.85rem; color:var(--ink-soft);}
+.field input[type=text]{
+  width:100%; padding:12px 14px; border-radius:14px; border:2px solid var(--border);
+  background:var(--surface-2); color:var(--ink); font-size:1rem; font-family:var(--font-body);
+}
+.field input[type=text]:focus{outline:3px solid color-mix(in srgb, var(--topic-vocab) 45%, transparent); border-color:var(--topic-vocab);}
+.swatches{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+.swatch{
+  width:52px; height:52px; border-radius:50%; border:3px solid transparent; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-size:1.4rem; transition:transform .15s, border-color .15s;
+}
+.swatch.selected{border-color:var(--ink); transform:scale(1.1);}
+.btn{
+  font-family:var(--font-display); font-weight:700; border:none; border-radius:16px; cursor:pointer;
+  padding:13px 22px; font-size:1rem; color:#fff; background:var(--topic-vocab); box-shadow:0 6px 0 color-mix(in srgb, var(--topic-vocab) 60%, black);
+  transition:transform .08s;
+}
+.btn:active{transform:translateY(4px); box-shadow:0 2px 0 color-mix(in srgb, var(--topic-vocab) 60%, black);}
+.btn.secondary{background:var(--surface-2); color:var(--ink); box-shadow:0 6px 0 var(--border);}
+.btn.secondary:active{box-shadow:0 2px 0 var(--border);}
+.btn.block{width:100%;}
+.btn[disabled]{opacity:.5; cursor:not-allowed;}
+.btn.small{padding:8px 14px; font-size:.82rem; border-radius:12px;}
+
+/* ===================== Map / Levels ===================== */
+.map-path{display:flex; flex-direction:column; gap:6px; padding:6px 0 4px;}
+.node-row{display:flex; align-items:center; gap:16px;}
+.node-row.right{flex-direction:row-reverse; text-align:right;}
+.connector{flex:none; width:3px; align-self:stretch; margin:0 calc(60px + 8px); border-left:4px dashed color-mix(in srgb, var(--bark) 55%, transparent); min-height:26px;}
+.level-node{
+  position:relative; flex:none; width:120px; height:120px; border-radius:50%; cursor:pointer; border:none;
+  background:var(--surface); box-shadow:var(--shadow); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  border:5px solid var(--node-color, var(--topic-vocab));
+}
+.level-node .emoji{font-size:2.1rem;}
+.level-node .stars{font-size:.72rem; letter-spacing:1px; color:var(--sun);}
+.level-node:active{transform:scale(.96);}
+.node-info{flex:1;}
+.node-info h3{font-size:1.05rem; color:var(--node-color, var(--ink));}
+.node-info .sub{font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; font-weight:700;}
+.node-info p{font-size:.84rem; color:var(--ink-soft); margin-top:4px; max-width:340px;}
+@media (max-width:560px){
+  .node-row, .node-row.right{flex-direction:column !important; text-align:center !important;}
+  .connector{margin:0; align-self:center;}
+  .node-info p{max-width:none;}
+}
+
+/* ===================== Cards / chips ===================== */
+.chip-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;}
+.chip{
+  border:2px solid var(--border); background:var(--surface-2); color:var(--ink-soft); border-radius:999px;
+  padding:6px 14px; font-size:.82rem; font-weight:700; cursor:pointer; transition:all .15s;
+}
+.chip.active{background:var(--topic-vocab); border-color:var(--topic-vocab); color:#fff;}
+
+.vocab-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:12px;}
+.vcard{
+  background:var(--surface-2); border-radius:18px; border:1px solid var(--border); padding:14px; cursor:pointer;
+  min-height:150px; display:flex; flex-direction:column; gap:6px; position:relative; transition:transform .15s;
+  perspective:800px;
+}
+.vcard:hover{transform:translateY(-3px);}
+.vcard .dot{position:absolute; top:10px; right:10px; width:10px; height:10px; border-radius:50%; background:var(--muted);}
+.vcard .dot.learning{background:var(--status-warning);}
+.vcard .dot.mastered{background:var(--status-good);}
+.vcard .icon{font-size:1.7rem;}
+.vcard .en{font-family:var(--font-display); font-weight:700; font-size:1.05rem;}
+.vcard .pos{font-size:.68rem; color:var(--muted); font-weight:700;}
+.vcard .zh{font-size:.88rem; color:var(--ink-soft); margin-top:auto;}
+.vcard .back-note{font-size:.72rem; color:var(--ink-soft); display:none; border-top:1px dashed var(--border); padding-top:6px; margin-top:4px;}
+.vcard.flipped .back-note{display:block;}
+.spk{border:none; background:var(--surface); color:var(--topic-dative); width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:.95rem; flex:none; box-shadow:0 2px 4px rgba(0,0,0,.1);}
+.spk:active{transform:scale(.9);}
+
+/* ===================== Teaching content ===================== */
+.grammar-tabs{display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;}
+.gtab{border:2px solid var(--border); background:var(--surface-2); border-radius:14px; padding:10px 16px; cursor:pointer; font-weight:700; color:var(--ink-soft); font-size:.88rem;}
+.gtab.active{color:#fff;}
+.teach-points{display:flex; flex-direction:column; gap:10px; margin-bottom:16px;}
+.teach-point{
+  display:flex; gap:10px; background:var(--surface-2); border-left:5px solid var(--tc, var(--topic-vocab)); border-radius:12px; padding:12px 14px;
+}
+.teach-point .num{font-family:var(--font-display); font-weight:800; color:var(--tc, var(--topic-vocab)); font-size:1.1rem;}
+.teach-point .zh{font-size:.92rem; margin-bottom:4px;}
+.teach-point .en{font-size:.85rem; color:var(--ink-soft); font-style:italic;}
+.example-strip{display:flex; flex-direction:column; gap:8px; margin-bottom:14px;}
+.example-chip{
+  display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:10px 12px;
+}
+.example-chip .txt{flex:1;}
+.example-chip .en{font-weight:700;}
+.example-chip .zh{font-size:.82rem; color:var(--ink-soft);}
+.table-wrap{overflow-x:auto; margin-bottom:14px;}
+table.gtable{border-collapse:collapse; width:100%; font-size:.86rem;}
+table.gtable th, table.gtable td{border:1px solid var(--border); padding:8px 10px; text-align:left;}
+table.gtable th{background:var(--surface-2); color:var(--ink-soft); font-weight:800;}
+.tip-box{
+  background:color-mix(in srgb, var(--sun) 20%, var(--surface)); border:1px dashed color-mix(in srgb, var(--sun) 60%, var(--border));
+  border-radius:14px; padding:12px 14px; font-size:.86rem; display:flex; gap:10px; align-items:flex-start;
+}
+
+/* ===================== Level detail ===================== */
+.level-hero{border-radius:24px; padding:22px; margin-bottom:14px; color:#fff; position:relative; overflow:hidden;
+  background:linear-gradient(135deg, var(--lc, var(--topic-vocab)), color-mix(in srgb, var(--lc, var(--topic-vocab)) 60%, black));}
+.level-hero .sub{opacity:.85; font-weight:700; font-size:.78rem; text-transform:uppercase; letter-spacing:.08em;}
+.level-hero h2{font-size:1.5rem; margin:2px 0 8px;}
+.level-hero p{font-size:.9rem; max-width:520px; opacity:.95;}
+.level-hero .back{position:absolute; top:16px; right:16px; background:rgba(255,255,255,.25); border:none; color:#fff; border-radius:12px; padding:6px 12px; cursor:pointer; font-weight:700; font-size:.8rem;}
+.subtabs{display:flex; gap:8px; margin-bottom:16px;}
+.subtab{flex:1; border:2px solid var(--border); background:var(--surface-2); border-radius:14px; padding:10px; cursor:pointer; font-weight:700; color:var(--ink-soft); text-align:center; font-size:.86rem;}
+.subtab.active{background:var(--lc,var(--topic-vocab)); border-color:var(--lc,var(--topic-vocab)); color:#fff;}
+
+/* ===================== Question engine ===================== */
+.qcard{background:var(--surface-2); border-radius:18px; padding:18px; border:1px solid var(--border);}
+.qcard .qmeta{display:flex; justify-content:space-between; font-size:.75rem; color:var(--muted); font-weight:700; margin-bottom:10px;}
+.qprompt{font-size:1.15rem; font-weight:700; margin-bottom:4px; line-height:1.5;}
+.qprompt .blank{display:inline-block; min-width:2.4em; border-bottom:3px solid var(--muted); text-align:center;}
+.qsub{font-size:.82rem; color:var(--ink-soft); margin-bottom:14px;}
+.qaudio-row{display:flex; align-items:center; gap:8px; margin-bottom:14px;}
+.opt-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+@media (max-width:480px){.opt-grid{grid-template-columns:1fr;}}
+.opt-btn{
+  text-align:left; padding:12px 14px; border-radius:14px; border:2px solid var(--border); background:var(--surface);
+  cursor:pointer; font-size:.95rem; font-family:var(--font-body); color:var(--ink); transition:all .12s;
+}
+.opt-btn:hover{border-color:var(--topic-vocab);}
+.opt-btn.correct{background:color-mix(in srgb, var(--status-good) 20%, var(--surface)); border-color:var(--status-good);}
+.opt-btn.wrong{background:color-mix(in srgb, var(--status-critical) 18%, var(--surface)); border-color:var(--status-critical);}
+.opt-btn[disabled]{cursor:default;}
+
+.tile-bank, .tile-answer{display:flex; flex-wrap:wrap; gap:8px; min-height:44px; padding:10px; border-radius:14px; background:var(--surface); border:2px dashed var(--border);}
+.tile-answer{margin-bottom:10px; background:var(--surface-2);}
+.tile{
+  background:var(--lc,var(--topic-vocab)); color:#fff; border:none; border-radius:10px; padding:9px 13px; font-weight:700;
+  cursor:pointer; font-size:.92rem;
+}
+.tile.used{opacity:.3; pointer-events:none;}
+.tile.ghost{background:transparent; border:2px dashed var(--border); color:var(--ink-soft);}
+
+.feedback-box{margin-top:14px; padding:14px; border-radius:14px; display:none;}
+.feedback-box.show{display:block; animation:popIn .2s;}
+.feedback-box.correct{background:color-mix(in srgb, var(--status-good) 16%, var(--surface)); border:1px solid var(--status-good);}
+.feedback-box.wrong{background:color-mix(in srgb, var(--status-critical) 14%, var(--surface)); border:1px solid var(--status-critical);}
+.feedback-box .head{font-weight:800; margin-bottom:6px; display:flex; align-items:center; gap:6px;}
+.feedback-box .explain{font-size:.88rem; color:var(--ink-soft); line-height:1.5;}
+.qactions{display:flex; justify-content:flex-end; gap:10px; margin-top:14px;}
+
+.progress-track{height:10px; border-radius:6px; background:var(--surface-2); overflow:hidden; margin-bottom:10px;}
+.progress-fill{height:100%; background:var(--lc,var(--topic-vocab)); transition:width .3s;}
+
+.summary-stars{display:flex; justify-content:center; gap:10px; font-size:2.6rem; margin:14px 0;}
+.summary-stars span{filter:grayscale(1); opacity:.35;}
+.summary-stars span.on{filter:none; opacity:1; animation:starPop .4s ease-out;}
+@keyframes starPop{0%{transform:scale(0) rotate(-25deg);}60%{transform:scale(1.25) rotate(8deg);}100%{transform:scale(1) rotate(0);}}
+.review-item{padding:10px 12px; border-radius:12px; background:var(--surface-2); margin-bottom:8px; font-size:.86rem;}
+.review-item.wrong{border-left:4px solid var(--status-critical);}
+.review-item.correct{border-left:4px solid var(--status-good);}
+
+/* ===================== Dashboard ===================== */
+.stat-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-bottom:16px;}
+.stat-tile{background:var(--surface-2); border-radius:16px; padding:14px; text-align:center;}
+.stat-tile .val{font-family:var(--font-display); font-size:1.6rem; font-weight:800; font-variant-numeric:tabular-nums; color:var(--ink);}
+.stat-tile .lbl{font-size:.72rem; color:var(--ink-soft); font-weight:700; margin-top:2px;}
+.chart-wrap{margin-bottom:20px;}
+.chart-wrap h3{font-size:1rem; margin-bottom:2px;}
+.chart-wrap .chart-sub{font-size:.78rem; color:var(--muted); margin-bottom:10px;}
+.legend-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:8px; font-size:.78rem; color:var(--ink-soft);}
+.legend-row .sw{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:middle;}
+.mastery-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(34px,1fr)); gap:6px;}
+.mtile{aspect-ratio:1; border-radius:8px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:.9rem; position:relative;}
+.mtile[data-m="mastered"]{background:color-mix(in srgb, var(--status-good) 30%, var(--surface-2));}
+.mtile[data-m="learning"]{background:color-mix(in srgb, var(--status-warning) 28%, var(--surface-2));}
+#chartTooltip{position:absolute; pointer-events:none; background:var(--ink); color:var(--bg); font-size:.72rem; padding:6px 9px; border-radius:8px; opacity:0; transition:opacity .1s; z-index:50; white-space:nowrap; font-weight:700;}
+
+/* ===================== Sprite companion ===================== */
+.sprite-dock{position:fixed; right:14px; bottom:96px; z-index:15; display:flex; align-items:flex-end; gap:8px; pointer-events:none;}
+.sprite-figure{width:76px; height:76px; filter:drop-shadow(0 6px 6px rgba(0,0,0,.18)); animation:floaty 3s ease-in-out infinite;}
+@keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.sprite-figure.happy{animation:bounceHappy .5s ease-out;}
+.sprite-figure.sad{animation:wobbleSad .5s ease-out;}
+@keyframes bounceHappy{0%{transform:scale(1);}30%{transform:scale(1.16,.86) translateY(-6px);}60%{transform:scale(.94,1.08) translateY(2px);}100%{transform:scale(1);}}
+@keyframes wobbleSad{0%,100%{transform:rotate(0);}25%{transform:rotate(-7deg);}75%{transform:rotate(7deg);}}
+@media (prefers-reduced-motion: reduce){ .sprite-figure, .sprite-figure.happy, .sprite-figure.sad{animation:none;} }
+.speech-bubble{
+  max-width:190px; background:var(--surface); border:1px solid var(--border); border-radius:16px 16px 4px 16px;
+  padding:10px 12px; font-size:.78rem; box-shadow:var(--shadow); margin-bottom:10px; display:none;
+}
+.speech-bubble.show{display:block; animation:popIn .2s;}
+@media (max-width:640px){ .sprite-dock{right:8px; bottom:88px;} .sprite-figure{width:56px; height:56px;} .speech-bubble{max-width:140px; font-size:.72rem;} }
+
+/* ===================== Misc ===================== */
+.kbd-inline{background:var(--surface-2); border-radius:6px; padding:1px 6px; font-size:.85em;}
+.footnote{font-size:.74rem; color:var(--muted); text-align:center; margin-top:6px;}
+</style>
+</head>
+<body>
+<div class="bg-hills" aria-hidden="true">
+  <svg viewBox="0 0 1200 220" preserveAspectRatio="none"><path d="M0,140 C200,200 350,80 600,130 C850,180 1000,90 1200,150 L1200,220 L0,220 Z" fill="var(--topic-vocab)" opacity="0.14"/><path d="M0,170 C220,120 420,190 650,150 C880,110 1050,190 1200,160 L1200,220 L0,220 Z" fill="var(--topic-dative)" opacity="0.10"/></svg>
+</div>
+<div id="leafLayer" aria-hidden="true"></div>
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 64 64"><ellipse cx="32" cy="38" rx="22" ry="20" fill="var(--topic-vocab)"/><circle cx="24" cy="34" r="5" fill="#fff"/><circle cx="40" cy="34" r="5" fill="#fff"/><circle cx="25" cy="35" r="2.4" fill="#20331f"/><circle cx="41" cy="35" r="2.4" fill="#20331f"/><ellipse cx="32" cy="46" rx="7" ry="4" fill="#ffffff" opacity=".5"/><path d="M32 18 C26 10 34 4 40 8 C36 10 34 15 32 18Z" fill="var(--sun)"/></svg>
+      <span>嫩芽任務</span>
+    </div>
+    <div class="stats-pill">
+      <span>🔥 <b id="streakVal">0</b> 天</span>
+      <span>⭐ <b id="starsVal">0</b>/15</span>
+      <button class="gear-btn" id="btnSettings" title="設定">⚙️</button>
+    </div>
+  </header>
+
+  <!-- ONBOARDING -->
+  <section id="screen-onboard" class="screen">
+    <div class="panel onboard-card">
+      <svg class="onboard-sprite" id="onboardSpritePreview" viewBox="0 0 64 64"><ellipse cx="32" cy="38" rx="22" ry="20" fill="var(--topic-vocab)"/><circle cx="24" cy="34" r="5" fill="#fff"/><circle cx="40" cy="34" r="5" fill="#fff"/><circle cx="25" cy="35" r="2.4" fill="#20331f"/><circle cx="41" cy="35" r="2.4" fill="#20331f"/><ellipse cx="32" cy="46" rx="7" ry="4" fill="#ffffff" opacity=".5"/><path d="M32 18 C26 10 34 4 40 8 C36 10 34 15 32 18Z" fill="var(--sun)"/></svg>
+      <h1>歡迎來到嫩芽森林！</h1>
+      <p class="lead">這裡是康軒英語二上 L2「Why Didn't You See a Doctor?」的文法探險樂園。教學 → 練習 → 測驗 → 紀錄，通通都在這裡！</p>
+      <div class="field">
+        <label for="nameInput">你的探險家名字</label>
+        <input type="text" id="nameInput" maxlength="12" placeholder="例如：小嫩芽">
+      </div>
+      <div class="field">
+        <label>選一位嫩芽夥伴</label>
+        <div class="swatches" id="swatchRow"></div>
+      </div>
+      <button class="btn block" id="btnStart">開始冒險 🌱</button>
+    </div>
+  </section>
+
+  <!-- MAP -->
+  <section id="screen-map" class="screen">
+    <div class="panel">
+      <div class="section-title">🗺️ 嫩芽花園地圖</div>
+      <p class="section-sub">依序挑戰五座關卡，學會單字與三大文法重點，成為文法探險家！</p>
+      <div class="map-path" id="mapPath"></div>
+    </div>
+  </section>
+
+  <!-- TEACH (global) -->
+  <section id="screen-teach" class="screen">
+    <div class="panel">
+      <div class="section-title">📖 文法教學區</div>
+      <p class="section-sub">Lesson 2 三大文法重點：授予動詞、why 疑問句、because / so。點 🔊 可以聽發音喔！</p>
+      <div class="grammar-tabs" id="grammarTabsGlobal"></div>
+      <div id="grammarContentGlobal"></div>
+    </div>
+  </section>
+
+  <!-- VOCAB GARDEN -->
+  <section id="screen-vocab" class="screen">
+    <div class="panel">
+      <div class="section-title">🌿 單字花園</div>
+      <p class="section-sub">點卡片翻面看中文與例句，點 🔊 聽發音。共 42 個 Lesson 2 單字。</p>
+      <div class="chip-row" id="vocabFilterRow"></div>
+      <div class="vocab-grid" id="vocabGrid"></div>
+    </div>
+  </section>
+
+  <!-- LEVEL DETAIL -->
+  <section id="screen-level" class="screen">
+    <div class="level-hero" id="levelHero">
+      <button class="back" id="btnBackToMap">← 地圖</button>
+      <div class="sub" id="levelSub"></div>
+      <h2 id="levelTitle"></h2>
+      <p id="levelBlurb"></p>
+    </div>
+    <div class="panel">
+      <div class="subtabs" id="levelSubtabs"></div>
+      <div id="levelContent"></div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="screen-dashboard" class="screen">
+    <div class="panel">
+      <div class="section-title">📊 學習儀表板</div>
+      <p class="section-sub" id="dashGreeting">持續練習，森林會越來越茂盛！</p>
+      <div class="stat-row" id="statRow"></div>
+
+      <div class="chart-wrap">
+        <h3>各主題正確率</h3>
+        <div class="chart-sub">單字 / 授予動詞 / why 疑問句 / because·so 各自的答對率</div>
+        <div id="barChart"></div>
+      </div>
+
+      <div class="chart-wrap">
+        <h3>測驗分數歷程</h3>
+        <div class="chart-sub">最近幾次「測驗模式」的得分（%）</div>
+        <div id="lineChart" style="position:relative;"></div>
+      </div>
+
+      <div class="chart-wrap">
+        <h3>單字精熟地圖</h3>
+        <div class="chart-sub">灰＝尚未練習　橘＝學習中　綠＝已精熟（正確率 ≥80% 且練習 3 次以上）</div>
+        <div class="mastery-grid" id="masteryGrid"></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="sprite-dock" id="spriteDock">
+  <div class="speech-bubble" id="speechBubble"></div>
+  <svg class="sprite-figure" id="spriteFigure" viewBox="0 0 64 64">
+    <ellipse cx="32" cy="38" rx="22" ry="20" fill="var(--topic-vocab)"/>
+    <circle cx="24" cy="34" r="5" fill="#fff"/><circle cx="40" cy="34" r="5" fill="#fff"/>
+    <circle class="pupil" cx="25" cy="35" r="2.4" fill="#20331f"/><circle class="pupil" cx="41" cy="35" r="2.4" fill="#20331f"/>
+    <ellipse cx="32" cy="46" rx="7" ry="4" fill="#ffffff" opacity=".5"/>
+    <path d="M32 18 C26 10 34 4 40 8 C36 10 34 15 32 18Z" fill="var(--sun)"/>
+  </svg>
+</div>
+<div id="chartTooltip"></div>
+
+<nav class="tabbar">
+  <div class="tabbar-inner" id="tabbar"></div>
+</nav>
+
+<script>
+"use strict";
+/* =========================================================================
+   嫩芽任務 — L2 文法大冒險
+   Single-file educational game. All data below is original content authored
+   for this game, referencing (not copying) the grammar points & vocabulary
+   of 康軒 Lesson 2 "Why Didn't You See a Doctor?".
+   ========================================================================= */
+
+/* ----------------------- DATA: VOCAB (42 words) ----------------------- */
+const VOCAB = [
+{id:1,en:"head",pos:"n.",zh:"頭",ex:"A ball hit me on my head.",exZh:"一顆球擊中了我的頭。",icon:"🤕",topic:"body"},
+{id:2,en:"hair",pos:"n.",zh:"頭髮",ex:"Michelle just washed her hair.",exZh:"Michelle 剛剛洗了頭髮。",icon:"💇",topic:"body"},
+{id:3,en:"shoulder",pos:"n.",zh:"肩膀",ex:"There is a bird on Ray's left shoulder.",exZh:"Ray 的左肩上有一隻鳥。",icon:"🤷",topic:"body"},
+{id:4,en:"stomach",pos:"n.",zh:"肚子；胃",ex:"My stomach hurt because I was very hungry.",exZh:"我胃痛，因為我非常餓。",icon:"🍽️",topic:"body"},
+{id:5,en:"arm",pos:"n.",zh:"手臂",ex:"Ben held his grandma's arm and walked into the hospital.",exZh:"Ben 挽著他奶奶的手臂走進醫院。",icon:"💪",topic:"body"},
+{id:6,en:"hand",pos:"n.",zh:"手",ex:"Adam caught the ball with one hand.",exZh:"Adam 用一隻手接住了球。",icon:"✋",topic:"body"},
+{id:7,en:"knee",pos:"n.",zh:"膝蓋",ex:"Grace hurt her knee and can't jump now.",exZh:"Grace 的膝蓋受傷了，現在無法跳。",icon:"🩹",topic:"body"},
+{id:8,en:"leg",pos:"n.",zh:"腿",ex:"Henry broke his leg yesterday.",exZh:"Henry 昨天摔斷了腿。",icon:"🦵",topic:"body"},
+{id:9,en:"toe",pos:"n.",zh:"腳趾",ex:"These new shoes are too tight on my toes.",exZh:"這雙新鞋對我的腳趾來說太緊了。",icon:"🦶",topic:"body"},
+{id:10,en:"neck",pos:"n.",zh:"脖子",ex:"Horses and zebras are animals with long necks.",exZh:"馬和斑馬都是長脖子的動物。",icon:"🦒",topic:"body"},
+{id:11,en:"catch a cold",pos:"phr.",zh:"感冒",ex:"Ashley caught a cold, but she still came to work.",exZh:"Ashley 感冒了，但她仍然來上班。",icon:"🤧",topic:"body"},
+{id:12,en:"fever",pos:"n.",zh:"發燒",ex:"Jack didn't go to school because he had a high fever.",exZh:"Jack 因為發高燒而沒有去上學。",icon:"🤒",topic:"body"},
+{id:13,en:"headache",pos:"n.",zh:"頭痛",ex:"Vicky had a headache, so she didn't go to the movies.",exZh:"Vicky 頭痛，所以她沒有去看電影。",icon:"😩",topic:"body"},
+{id:14,en:"sore throat",pos:"phr.",zh:"喉嚨痛",ex:"Cathy couldn't speak because she had a sore throat.",exZh:"Cathy 因為喉嚨痛而無法說話。",icon:"😖",topic:"body"},
+{id:15,en:"stay",pos:"v./n.",zh:"停留",ex:"We stayed in Taitung for two weeks this summer.",exZh:"今年夏天我們在臺東待了兩個星期。",icon:"🏨",topic:"misc"},
+{id:16,en:"mask",pos:"n.",zh:"口罩",ex:"Everyone at the party is wearing a mask.",exZh:"派對上每個人都戴著口罩。",icon:"😷",topic:"misc"},
+{id:17,en:"call",pos:"v./n.",zh:"打電話",ex:"Harry calls his girlfriend every night.",exZh:"Harry 每天晚上都會打電話給他的女朋友。",icon:"📞",topic:"comm"},
+{id:18,en:"speak",pos:"v.",zh:"說話；講",ex:"May I speak to Angela, please?",exZh:"我可以和 Angela 通話嗎？",icon:"💬",topic:"comm"},
+{id:19,en:"send",pos:"v.",zh:"寄；送",ex:"Joe sent a birthday card to his cousin.",exZh:"Joe 寄了一張生日卡給他的表哥。",icon:"📤",topic:"comm"},
+{id:20,en:"message",pos:"n.",zh:"訊息",ex:"May I take a message for you?",exZh:"我可以幫你留言嗎？",icon:"💌",topic:"comm"},
+{id:21,en:"why",pos:"adv.",zh:"為什麼",ex:"Why didn't you come to the party last night?",exZh:"你昨晚為什麼沒來參加派對？",icon:"❓",topic:"comm"},
+{id:22,en:"because",pos:"conj.",zh:"因為",ex:"Terry drank three glasses of water because he was thirsty.",exZh:"Terry 喝了三杯水，因為他很口渴。",icon:"🧩",topic:"comm"},
+{id:23,en:"country",pos:"n.",zh:"國家；鄉間",ex:"Mia and Sue are from different countries.",exZh:"Mia 和 Sue 來自不同的國家。",icon:"🌍",topic:"misc"},
+{id:24,en:"serious",pos:"adj.",zh:"嚴重的",ex:"Eric stayed in the hospital because he had a serious health problem.",exZh:"Eric 因嚴重的健康問題而住院。",icon:"‼️",topic:"body"},
+{id:25,en:"health",pos:"n.",zh:"健康",ex:"Allen exercises every morning. He is in good health.",exZh:"Allen 每天早上都運動，他的身體狀況良好。",icon:"❤️",topic:"body"},
+{id:26,en:"hurt",pos:"v./adj.",zh:"疼痛；受傷的",ex:"William's legs hurt a lot, so he went to the doctor.",exZh:"William 的腿很痛，所以他去看醫生。",icon:"🤕",topic:"body"},
+{id:27,en:"ice cream",pos:"n.",zh:"冰淇淋",ex:"The ice cream is yummy. Can I have more?",exZh:"冰淇淋真好吃，我可以再多要一些嗎？",icon:"🍦",topic:"misc"},
+{id:28,en:"so",pos:"conj.",zh:"所以",ex:"Anna is afraid of the dark, so she sleeps with a light on.",exZh:"Anna 怕黑，所以她睡覺時會開燈。",icon:"➡️",topic:"comm"},
+{id:29,en:"too bad",pos:"phr.",zh:"太糟了",ex:"I can't go to the game with you. Too bad!",exZh:"我不能跟你一起去比賽了。太糟糕了！",icon:"😔",topic:"comm"},
+{id:30,en:"treat",pos:"v.",zh:"治療；對待",ex:"Shirley didn't treat her cold with medicine.",exZh:"Shirley 沒有用藥物治療感冒。",icon:"💊",topic:"body"},
+{id:31,en:"as",pos:"prep.",zh:"如同",ex:"Jennifer lives in the same building as her parents.",exZh:"Jennifer 和她的父母住在同一棟樓裡。",icon:"⚖️",topic:"misc"},
+{id:32,en:"sick",pos:"adj.",zh:"生病的",ex:"Gary's daughter is sick. He is taking care of her.",exZh:"Gary 的女兒生病了，他正在照顧她。",icon:"🥴",topic:"body"},
+{id:33,en:"medicine",pos:"n.",zh:"藥",ex:"Please take the medicine three times a day.",exZh:"請每天服藥三次。",icon:"💊",topic:"body"},
+{id:34,en:"coat",pos:"n.",zh:"大衣",ex:"It's hot in Tainan. You don't need a coat there.",exZh:"臺南很熱，你在那裡不需要穿大衣。",icon:"🧥",topic:"misc"},
+{id:35,en:"healthy",pos:"adj.",zh:"健康的",ex:"Fish is healthy food. You should eat more.",exZh:"魚是健康食物，你應該多吃一點。",icon:"🥗",topic:"body"},
+{id:36,en:"body",pos:"n.",zh:"身體",ex:"The blanket can keep your body warm.",exZh:"這條毯子可以讓你的身體保暖。",icon:"🧍",topic:"body"},
+{id:37,en:"clothes",pos:"n.",zh:"衣服",ex:"I gave these clothes to Ivy because they are too small for me.",exZh:"我把這些衣服給了 Ivy，因為它們對我來說太小了。",icon:"👕",topic:"misc"},
+{id:38,en:"strong",pos:"adj.",zh:"強壯的；堅固的",ex:"Jeff is strong. He seldom gets sick.",exZh:"Jeff 很強壯，他很少生病。",icon:"🦾",topic:"body"},
+{id:39,en:"maybe",pos:"adv.",zh:"也許",ex:"Maybe they are right, but maybe not.",exZh:"他們或許是對的，但或許不是。",icon:"🤔",topic:"comm"},
+{id:40,en:"try",pos:"v./n.",zh:"嘗試",ex:"I tried Jenny's fruit pies. They are delicious.",exZh:"我嘗了 Jenny 的水果派，它們很美味。",icon:"🎯",topic:"misc"},
+{id:41,en:"put on",pos:"phr.",zh:"穿上",ex:"Hank put on his coat and then went out.",exZh:"Hank 穿上外套然後出去了。",icon:"🧣",topic:"misc"},
+{id:42,en:"as for",pos:"phr.",zh:"至於",ex:"As for my sister, she likes pancakes a lot.",exZh:"至於我姊姊，她非常喜歡鬆餅。",icon:"🔄",topic:"comm"}
+];
+const VOCAB_TOPICS = {all:"全部", body:"身體與病痛", comm:"溝通與連接詞", misc:"生活用語"};
+
+/* ----------------------- DATA: GRAMMAR TEACHING ----------------------- */
+const GRAMMAR = {
+  dative:{ key:"dative", name:"授予動詞", nameFull:"授予動詞 Dative Verbs", color:"dative",
+    points:[
+      {zh:"授予動詞後面可以接兩個受詞：一個是「人」（間接受詞），一個是「物」（直接受詞）。", en:""},
+      {zh:"句型一：主詞＋授予動詞＋人＋物。", en:"Subject + verb + person + thing."},
+      {zh:"句型二：主詞＋授予動詞＋物＋介系詞（to/for）＋人。意思和句型一相同。", en:"Subject + verb + thing + to/for + person."},
+      {zh:"當「物」是代名詞（it / them）時，一定要用句型二，不能用句型一！", en:"✓ gave it to him　✗ gave him it"},
+      {zh:"to 表示「動作傳達的方向」；for 表示「特地為某人做某事」。", en:"send ... to (寄給) / buy ... for (買給)"}
+    ],
+    examples:[
+      {en:"Zoe gave her brother a puppy.", zh:"Zoe 給了她哥哥一隻小狗。"},
+      {en:"= Zoe gave a puppy to her brother.", zh:"（意思相同）"},
+      {en:"→ Zoe gave it to her brother.", zh:"（物是代名詞，只能用這個句型）"},
+      {en:"Leo bought some flowers for his mom.", zh:"Leo 買了一些花給他媽媽。"}
+    ],
+    table:[["to","give, read, tell, send, show, write, teach"],["for","buy, make, cook, get"]],
+    tip:"嫩芽小提醒：把「物」想成快遞包裹 — to 是直接送到某人手上；for 是特地為某人準備的禮物喔！"
+  },
+  why:{ key:"why", name:"Why 疑問句", nameFull:"疑問詞 why：詢問原因", color:"why",
+    points:[
+      {zh:"句型一：Why ＋ be 動詞 ＋ 人 …？", en:"Why are you so busy today?"},
+      {zh:"句型二：Why ＋ 助動詞（do/does/did/can...）＋ 人 ＋ 原形動詞 …？", en:"Why didn't Jane go to school today?"},
+      {zh:"回答常用 Because 開頭，說明原因。", en:"Because she caught a cold."},
+      {zh:"補充：How come + 直述句（不需倒裝），也可以問原因。", en:"How come you are late for school?"},
+      {zh:"補充：Why don't you...? / Why not + 原形動詞...? 用來「提出建議」，不是在問原因！", en:"Why don't you buy her a new bag? / Why not go to the beach?"}
+    ],
+    examples:[
+      {en:"Why didn't Jane go to school today?", zh:"為什麼 Jane 今天沒有去上學？"},
+      {en:"Because she caught a cold.", zh:"因為她感冒了。"},
+      {en:"Why are you so busy today?", zh:"為什麼你今天那麼忙碌？"}
+    ],
+    table:null,
+    tip:"嫩芽小提醒：問句裡出現 didn't / doesn't 這些助動詞時，後面的動詞要記得改回原形喔！"
+  },
+  becauseso:{ key:"becauseso", name:"because 和 so", nameFull:"連接詞 because、so", color:"becauseso",
+    points:[
+      {zh:"because 引導「原因」子句，so 引導「結果」子句。", en:""},
+      {zh:"句型一：結果子句 ＋ because ＋ 原因子句。（中間不加逗號）", en:"Jane stayed home because she caught a cold."},
+      {zh:"句型二：Because ＋ 原因子句 , 結果子句。（原因子句後要加逗號）", en:"Because she caught a cold, Jane stayed home."},
+      {zh:"句型三：原因子句 , so ＋ 結果子句。（so 前一定要加逗號，且 so 不可放句首）", en:"Jane caught a cold, so she stayed home."},
+      {zh:"重要：中文可說「因為……，所以……」，但英文一句話裡 because 和 so 不能同時出現！", en:"✗ Because she was sick, so she stayed home."},
+      {zh:"比較：because 是連接詞，後接子句；because of 是介系詞片語，後接名詞。", en:"because the weather was bad ＝ because of the bad weather"}
+    ],
+    examples:[
+      {en:"Jane caught a cold, so she stayed home.", zh:"Jane 感冒了，所以她待在家裡。"},
+      {en:"Jane stayed home because she caught a cold.", zh:"Jane 待在家裡，因為她感冒了。"},
+      {en:"Because she caught a cold, Jane stayed home.", zh:"因為她感冒了，Jane 待在家裡。"}
+    ],
+    table:null,
+    tip:"嫩芽小提醒：因果農場的規則 — 一顆種子只能選一種肥料！because 和 so 不能一起用在同一句話裡。"
+  }
+};
+
+/* ----------------------- DATA: DATIVE PRACTICE BANK ----------------------- */
+const DATIVE_BANK = [
+ {subj:"Zoe",verb:"gave",do:"a puppy",doPronoun:"it",io:"her brother",ioPronoun:"him",prep:"to",zh:"Zoe 給了她哥哥一隻小狗。"},
+ {subj:"Leo",verb:"bought",do:"some flowers",doPronoun:"them",io:"his mom",ioPronoun:"her",prep:"for",zh:"Leo 買了一些花給他媽媽。"},
+ {subj:"Mia",verb:"sent",do:"a postcard",doPronoun:"it",io:"her teacher",ioPronoun:"her",prep:"to",zh:"Mia 寄了一張明信片給她的老師。"},
+ {subj:"Noah",verb:"made",do:"a sandwich",doPronoun:"it",io:"his sister",ioPronoun:"her",prep:"for",zh:"Noah 為他妹妹做了一個三明治。"},
+ {subj:"Ivy",verb:"showed",do:"her painting",doPronoun:"it",io:"the class",ioPronoun:"them",prep:"to",zh:"Ivy 把她的畫呈現給全班看。"},
+ {subj:"Dylan",verb:"told",do:"a funny joke",doPronoun:"it",io:"his classmates",ioPronoun:"them",prep:"to",zh:"Dylan 跟他的同學說了一個好笑的笑話。"},
+ {subj:"Coco",verb:"wrote",do:"a thank-you note",doPronoun:"it",io:"her friend",ioPronoun:"her",prep:"to",zh:"Coco 寫了一張感謝小卡給她的朋友。"},
+ {subj:"Amy",verb:"cooked",do:"some noodles",doPronoun:"them",io:"her grandpa",ioPronoun:"him",prep:"for",zh:"Amy 為她的爺爺煮了麵。"},
+ {subj:"Ben",verb:"got",do:"a new backpack",doPronoun:"it",io:"his cousin",ioPronoun:"him",prep:"for",zh:"Ben 為他的表弟弄到了一個新背包。"},
+ {subj:"Grace",verb:"taught",do:"a new song",doPronoun:"it",io:"the kids",ioPronoun:"them",prep:"to",zh:"Grace 教了孩子們一首新歌。"}
+];
+
+/* ----------------------- DATA: WHY PRACTICE BANK ----------------------- */
+const WHY_BANK = [
+ {statement:"Jane didn't go to school today.",question:"Why didn't Jane go to school today?",reason:"Because she caught a cold.",zh:"因為她感冒了。"},
+ {statement:"Tom is absent from PE class.",question:"Why is Tom absent from PE class?",reason:"Because he hurt his knee.",zh:"因為他的膝蓋受傷了。"},
+ {statement:"Mia can't eat ice cream.",question:"Why can't Mia eat ice cream?",reason:"Because she has a sore throat.",zh:"因為她喉嚨痛。"},
+ {statement:"Leo went to the doctor.",question:"Why did Leo go to the doctor?",reason:"Because he had a high fever.",zh:"因為他發高燒。"},
+ {statement:"Coco is wearing a mask.",question:"Why is Coco wearing a mask?",reason:"Because she has a bad cold.",zh:"因為她重感冒。"},
+ {statement:"Noah didn't finish his lunch.",question:"Why didn't Noah finish his lunch?",reason:"Because his stomach hurt.",zh:"因為他的胃很痛。"},
+ {statement:"Ivy stayed home yesterday.",question:"Why did Ivy stay home yesterday?",reason:"Because she had a headache.",zh:"因為她頭痛。"},
+ {statement:"Ben can't play basketball.",question:"Why can't Ben play basketball?",reason:"Because he hurt his leg.",zh:"因為他的腿受傷了。"}
+];
+
+/* ----------------------- DATA: BECAUSE/SO PRACTICE BANK ----------------------- */
+const BECAUSESO_BANK = [
+ {subj:"Jane",pronoun:"she",cause:"caught a cold",effect:"stayed home"},
+ {subj:"Tom",pronoun:"he",cause:"hurt his knee",effect:"couldn't join PE class"},
+ {subj:"Mia",pronoun:"she",cause:"had a sore throat",effect:"couldn't eat ice cream"},
+ {subj:"Leo",pronoun:"he",cause:"had a high fever",effect:"went to see a doctor"},
+ {subj:"Zoe",pronoun:"she",cause:"felt cold",effect:"put on a coat"},
+ {subj:"Ben",pronoun:"he",cause:"ate too much candy",effect:"had a stomachache"},
+ {subj:"Noah",pronoun:"he",cause:"studied hard",effect:"passed the big test"},
+ {subj:"Ivy",pronoun:"she",cause:"practiced every day",effect:"became strong and healthy"}
+];
+
+/* ----------------------- DATA: LEVELS ----------------------- */
+const LEVELS = [
+ {id:1,key:"body",name:"身體診所",sub:"BODY CLINIC",emoji:"🏥",color:"vocab",
+  blurb:"嫩芽診所開張了！運用身體部位與生病相關的單字，幫助森林裡的小夥伴恢復健康吧。",
+  teachType:"vocab"},
+ {id:2,key:"dative",name:"包裹快遞站",sub:"DELIVERY SPROUTS",emoji:"📦",color:"dative",
+  blurb:"嫩芽快遞員最愛把東西送給朋友！練習「授予動詞」句型，把包裹正確地送到對的人手上。",
+  teachType:"grammar",grammarKey:"dative"},
+ {id:3,key:"why",name:"為什麼森林",sub:"WHY FOREST",emoji:"🌲",color:"why",
+  blurb:"森林裡到處都是疑問！化身偵探嫩芽，練習用 why 疑問句問出事情發生的原因。",
+  teachType:"grammar",grammarKey:"why"},
+ {id:4,key:"becauseso",name:"因果農場",sub:"CAUSE & EFFECT FARM",emoji:"🌾",color:"becauseso",
+  blurb:"因果農場種滿了 because 和 so 種子，把原因和結果正確地連接起來吧！",
+  teachType:"grammar",grammarKey:"becauseso"},
+ {id:5,key:"final",name:"嫩芽花園盃",sub:"SPROUT CUP FINALE",emoji:"🏆",color:"mixed",
+  blurb:"集合單字與三大文法的總複習！通過嫩芽花園盃，證明你是真正的文法探險家。",
+  teachType:"summary"}
+];
+
+/* ----------------------- STATE ----------------------- */
+const STORE_KEY = "sproutQuestState_v2";
+const SPRITE_COLORS = [
+ {hex:"var(--topic-vocab)", raw:"#1baf7a", name:"綠嫩芽"},
+ {hex:"var(--topic-dative)", raw:"#2a78d6", name:"藍嫩芽"},
+ {hex:"var(--topic-why)", raw:"#eb6834", name:"橘嫩芽"},
+ {hex:"var(--topic-mixed)", raw:"#8659a8", name:"紫嫩芽"}
+];
+
+function defaultState(){
+  return {
+    name:"", spriteIdx:0, createdAt:new Date().toISOString(), playDates:[],
+    wordStats:{}, grammarStats:{dative:{attempts:0,correct:0},why:{attempts:0,correct:0},becauseso:{attempts:0,correct:0}},
+    levelStars:{1:0,2:0,3:0,4:0,5:0}, quizHistory:[]
+  };
+}
+let state = loadState();
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    return Object.assign(defaultState(), parsed);
+  }catch(e){ return defaultState(); }
+}
+function saveState(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){ /* storage unavailable: continue without persistence */ }
+}
+function markPlayedToday(){
+  const today = new Date().toISOString().slice(0,10);
+  if(!state.playDates.includes(today)){ state.playDates.push(today); }
+  saveState();
+}
+function computeStreak(){
+  const days = new Set(state.playDates);
+  let streak = 0;
+  let d = new Date();
+  // if not played today yet, streak counts up to yesterday
+  if(!days.has(d.toISOString().slice(0,10))){ d.setDate(d.getDate()-1); }
+  while(days.has(d.toISOString().slice(0,10))){ streak++; d.setDate(d.getDate()-1); }
+  return streak;
+}
+function recordVocab(wordId, correct){
+  if(!state.wordStats[wordId]) state.wordStats[wordId] = {attempts:0,correct:0};
+  state.wordStats[wordId].attempts++;
+  if(correct) state.wordStats[wordId].correct++;
+  saveState();
+}
+function recordGrammar(key, correct){
+  if(!state.grammarStats[key]) state.grammarStats[key] = {attempts:0,correct:0};
+  state.grammarStats[key].attempts++;
+  if(correct) state.grammarStats[key].correct++;
+  saveState();
+}
+function totalStars(){ return Object.values(state.levelStars).reduce((a,b)=>a+b,0); }
+
+/* ----------------------- UTIL ----------------------- */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function pick(arr,n){ return shuffle(arr).slice(0,n); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+function normWords(s){ return s.toLowerCase().replace(/[.?!,]/g,"").trim().replace(/\s+/g," "); }
+
+/* ----------------------- TTS ----------------------- */
+let ttsReady = "speechSynthesis" in window;
+function speak(text){
+  if(!ttsReady) return;
+  try{
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US"; u.rate = 0.92; u.pitch = 1.05;
+    window.speechSynthesis.speak(u);
+  }catch(e){ /* speech synthesis unavailable in this browser */ }
+}
+function spkBtn(text, extraClass){
+  const t = esc(text).replace(/'/g,"&#39;");
+  return '<button type="button" class="spk '+(extraClass||'')+'" onclick="speak(\''+text.replace(/'/g,"\\'")+'\')" title="播放發音" aria-label="播放發音">🔊</button>';
+}
+
+/* ----------------------- SPRITE COMPANION ----------------------- */
+const SPRITE_LINES = {
+  idle:["準備好了嗎？我們出發吧！🌱","今天想學點什麼呢？","嫩芽森林歡迎你！"],
+  correct:["答對了！你好棒！🌟","太厲害了，繼續加油！","嫩芽們都在為你鼓掌！👏"],
+  wrong:["沒關係，再試一次！","看看解說，我們再挑戰一次！","失敗是成功嫩芽的肥料！🌧️"],
+  levelDone:["恭喜通關！你是文法探險家！🏆","這關完成了，休息一下再繼續吧！"]
+};
+function setSpriteColor(idx){
+  const c = SPRITE_COLORS[idx % SPRITE_COLORS.length];
+  document.querySelectorAll('#spriteFigure ellipse:first-child').forEach(el=>el.setAttribute('fill', c.hex));
+}
+function spriteSay(text, mood){
+  const bubble = document.getElementById('speechBubble');
+  const fig = document.getElementById('spriteFigure');
+  bubble.textContent = text;
+  bubble.classList.add('show');
+  fig.classList.remove('happy','sad');
+  if(mood==='happy') fig.classList.add('happy');
+  if(mood==='sad') fig.classList.add('sad');
+  clearTimeout(window.__spriteTimer);
+  window.__spriteTimer = setTimeout(()=>{ bubble.classList.remove('show'); fig.classList.remove('happy','sad'); }, 3200);
+}
+function spriteReact(correct){
+  const lines = correct ? SPRITE_LINES.correct : SPRITE_LINES.wrong;
+  spriteSay(lines[Math.floor(Math.random()*lines.length)], correct?'happy':'sad');
+}
+
+/* ----------------------- FALLING LEAVES DECORATION ----------------------- */
+(function initLeaves(){
+  const layer = document.getElementById('leafLayer');
+  layer.style.cssText = "position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;";
+  const emojis = ["🍃","🌿","🍂"];
+  for(let i=0;i<10;i++){
+    const el = document.createElement('div');
+    el.className = 'leaf';
+    el.textContent = emojis[i % emojis.length];
+    el.style.left = (Math.random()*100)+"%";
+    el.style.animationDuration = (10+Math.random()*10)+"s";
+    el.style.animationDelay = (Math.random()*10)+"s";
+    layer.appendChild(el);
+  }
+})();
+
+/* ----------------------- QUESTION GENERATORS ----------------------- */
+function genVocabMC(word, pool){
+  const wrongs = pick(pool.filter(w=>w.id!==word.id), 3).map(w=>w.zh);
+  const options = shuffle([{label:word.zh,correct:true}, ...wrongs.map(z=>({label:z,correct:false}))]);
+  return {
+    kind:"mc", statsKind:"vocab", statsKey:word.id,
+    promptMain:word.en, promptSub:"("+word.pos+") 請選出正確的中文意思", audio:word.en,
+    options,
+    explain: word.en+"（"+word.pos+"）＝ "+word.zh+"<br>例句：<i>"+esc(word.ex)+"</i><br>"+esc(word.exZh),
+    explainAudio: word.ex
+  };
+}
+function genVocabCloze(word, pool){
+  const re = new RegExp(word.en.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), "i");
+  const blanked = word.ex.replace(re, '<span class="blank">＿＿＿＿＿</span>');
+  const wrongs = pick(pool.filter(w=>w.id!==word.id), 3).map(w=>w.en);
+  const options = shuffle([{label:word.en,correct:true}, ...wrongs.map(w=>({label:w,correct:false}))]);
+  return {
+    kind:"mc", statsKind:"vocab", statsKey:word.id,
+    promptMain: blanked, promptSub:"請選出正確的單字完成句子", audio: word.ex,
+    options,
+    explain: "完整句子：<i>"+esc(word.ex)+"</i><br>"+esc(word.exZh),
+    explainAudio: word.ex
+  };
+}
+function genDativeQuestions(item){
+  const ioForm = item.subj+" "+item.verb+" "+item.io+" "+item.do+".";
+  const doForm = item.subj+" "+item.verb+" "+item.do+" "+item.prep+" "+item.io+".";
+  const qs = [];
+  // 1) preposition fill
+  const otherPrep = item.prep==='to' ? 'for' : 'to';
+  qs.push({
+    kind:"mc", statsKind:"grammar", statsKey:"dative",
+    promptMain: item.subj+" "+item.verb+" "+item.do+' <span class="blank">＿＿＿</span> '+item.io+".",
+    promptSub:"請選出正確的介系詞", audio: doForm,
+    options: shuffle([{label:item.prep,correct:true},{label:otherPrep,correct:false},{label:"with",correct:false},{label:"of",correct:false}]),
+    explain: "正確句子：<i>"+esc(doForm)+"</i><br>"+esc(item.zh)+"<br>"+(item.prep==="to"?"give / send / show / tell / write / teach / read 搭配 to。":"buy / make / cook / get 搭配 for。"),
+    explainAudio: doForm
+  });
+  // 2) sentence builder (direction depends on hash of subj for variety but deterministic-ish random)
+  const dirA = Math.random() < 0.5;
+  if(dirA){
+    qs.push({
+      kind:"build", statsKind:"grammar", statsKey:"dative",
+      promptMain: "重組句子（物＋介系詞＋人 的句型）", promptSub: "提示：" + ioForm,
+      audio: doForm, targetText: doForm, tiles: shuffle(doForm.replace(/\.$/,'').split(" ")),
+      explain: "答案：<i>"+esc(doForm)+"</i>　＝　<i>"+esc(ioForm)+"</i><br>"+esc(item.zh),
+      explainAudio: doForm
+    });
+  } else {
+    qs.push({
+      kind:"build", statsKind:"grammar", statsKey:"dative",
+      promptMain: "重組句子（人＋物 的句型）", promptSub: "提示：" + doForm,
+      audio: ioForm, targetText: ioForm, tiles: shuffle(ioForm.replace(/\.$/,'').split(" ")),
+      explain: "答案：<i>"+esc(ioForm)+"</i>　＝　<i>"+esc(doForm)+"</i><br>"+esc(item.zh),
+      explainAudio: ioForm
+    });
+  }
+  // 3) pronoun rewrite MC
+  const correctPronounSentence = item.subj+" "+item.verb+" "+item.doPronoun+" "+item.prep+" "+item.io+".";
+  const wrong1 = item.subj+" "+item.verb+" "+item.io+" "+item.doPronoun+"."; // classic mistake: IO+DO with pronoun
+  const wrong2 = item.subj+" "+item.verb+" "+item.doPronoun+" "+item.io+"."; // missing preposition
+  const wrong3 = item.subj+" "+item.verb+" "+item.doPronoun+" "+otherPrep+" "+item.io+"."; // wrong preposition
+  qs.push({
+    kind:"mc", statsKind:"grammar", statsKey:"dative",
+    promptMain: "「"+doForm+"」的「"+item.do+"」換成代名詞，哪一句正確？", promptSub:"選出用代名詞改寫後，文法正確的句子",
+    audio: correctPronounSentence,
+    options: shuffle([{label:correctPronounSentence,correct:true},{label:wrong1,correct:false},{label:wrong2,correct:false},{label:wrong3,correct:false}]),
+    explain: "物是代名詞時，一定要用「物＋介系詞＋人」的句型：<i>"+esc(correctPronounSentence)+"</i>",
+    explainAudio: correctPronounSentence
+  });
+  return qs;
+}
+function genWhyQuestions(pair, allPairs){
+  const qs = [];
+  qs.push({
+    kind:"build", statsKind:"grammar", statsKey:"why",
+    promptMain:"根據句子重組出 Why 問句", promptSub:"提示：" + pair.statement,
+    audio: pair.question, targetText: pair.question, tiles: shuffle(pair.question.replace(/\?$/,'').split(" ")),
+    explain: "答案：<i>"+esc(pair.question)+"</i><br>回答：<i>"+esc(pair.reason)+"</i>（"+esc(pair.zh)+"）",
+    explainAudio: pair.question, appendMark:"?"
+  });
+  const wrongReasons = pick(allPairs.filter(p=>p!==pair),3).map(p=>p.reason);
+  qs.push({
+    kind:"mc", statsKind:"grammar", statsKey:"why",
+    promptMain: pair.question, promptSub:"選出正確的回答", audio: pair.question,
+    options: shuffle([{label:pair.reason,correct:true}, ...wrongReasons.map(r=>({label:r,correct:false}))]),
+    explain: esc(pair.question)+"<br>"+esc(pair.reason)+"（"+esc(pair.zh)+"）",
+    explainAudio: pair.reason
+  });
+  return qs;
+}
+function tmplSo(p){ return cap(p.subj)+" "+p.cause+", so "+p.pronoun+" "+p.effect+"."; }
+function tmplBecauseMid(p){ return cap(p.subj)+" "+p.effect+" because "+p.pronoun+" "+p.cause+"."; }
+function tmplBecauseFront(p){ return "Because "+p.pronoun+" "+p.cause+", "+p.subj+" "+p.effect+"."; }
+function genBecauseSoQuestions(pair){
+  const qs = [];
+  const correctSo = tmplSo(pair);
+  const noCommaSo = cap(pair.subj)+" "+pair.cause+" so "+pair.pronoun+" "+pair.effect+".";
+  const reversedSo = cap(pair.pronoun)+" "+pair.effect+", so "+pair.subj+" "+pair.cause+".";
+  const doubleConnector = "Because "+pair.pronoun+" "+pair.cause+", so "+pair.subj+" "+pair.effect+".";
+  qs.push({
+    kind:"mc", statsKind:"grammar", statsKey:"becauseso",
+    promptMain:"哪一句是正確使用 so 的句子？", promptSub:"原因："+pair.subj+" "+pair.cause+"　結果："+pair.pronoun+" "+pair.effect,
+    audio: correctSo,
+    options: shuffle([{label:correctSo,correct:true},{label:noCommaSo,correct:false},{label:reversedSo,correct:false},{label:doubleConnector,correct:false}]),
+    explain: "正確：<i>"+esc(correctSo)+"</i><br>so 前面一定要有逗號，且不能跟 because 一起用喔！",
+    explainAudio: correctSo
+  });
+  const correctBecause = tmplBecauseMid(pair);
+  const frontNoComma = "Because "+pair.pronoun+" "+pair.cause+" "+pair.subj+" "+pair.effect+".";
+  const midExtraComma = cap(pair.subj)+" "+pair.effect+", because "+pair.pronoun+" "+pair.cause+".";
+  const reversedBecause = cap(pair.subj)+" "+pair.cause+" because "+pair.pronoun+" "+pair.effect+".";
+  qs.push({
+    kind:"mc", statsKind:"grammar", statsKey:"becauseso",
+    promptMain:"哪一句是正確使用 because 的句子？", promptSub:"原因："+pair.subj+" "+pair.cause+"　結果："+pair.pronoun+" "+pair.effect,
+    audio: correctBecause,
+    options: shuffle([{label:correctBecause,correct:true},{label:frontNoComma,correct:false},{label:midExtraComma,correct:false},{label:reversedBecause,correct:false}]),
+    explain: "正確：<i>"+esc(correctBecause)+"</i>　（也可寫成：<i>"+esc(tmplBecauseFront(pair))+"</i>）<br>because 放句中不加逗號；放句首時，原因子句後才要加逗號。",
+    explainAudio: correctBecause
+  });
+  return qs;
+}
+
+function buildPoolForLevel(level){
+  if(level.key==="body"){
+    const words = VOCAB.filter(w=>w.topic==="body");
+    let out = [];
+    words.forEach(w=>{ out.push(genVocabMC(w, words)); out.push(genVocabCloze(w, words)); });
+    return out;
+  }
+  if(level.key==="dative"){
+    let out = [];
+    DATIVE_BANK.forEach(item=>{ out = out.concat(genDativeQuestions(item)); });
+    return out;
+  }
+  if(level.key==="why"){
+    let out = [];
+    WHY_BANK.forEach(p=>{ out = out.concat(genWhyQuestions(p, WHY_BANK)); });
+    return out;
+  }
+  if(level.key==="becauseso"){
+    let out = [];
+    BECAUSESO_BANK.forEach(p=>{ out = out.concat(genBecauseSoQuestions(p)); });
+    return out;
+  }
+  if(level.key==="final"){
+    let out = [];
+    out = out.concat(pick(VOCAB, 6).flatMap(w=>[genVocabMC(w, VOCAB)]));
+    out = out.concat(pick(DATIVE_BANK,4).flatMap(genDativeQuestions));
+    out = out.concat(pick(WHY_BANK,3).flatMap(p=>genWhyQuestions(p, WHY_BANK)));
+    out = out.concat(pick(BECAUSESO_BANK,3).flatMap(genBecauseSoQuestions));
+    return shuffle(out);
+  }
+  return [];
+}
+
+/* ----------------------- ROUTER ----------------------- */
+const TABS = [
+  {key:"map", ic:"🗺️", label:"地圖"},
+  {key:"teach", ic:"📖", label:"教學"},
+  {key:"vocab", ic:"🌿", label:"單字"},
+  {key:"final-quiz", ic:"📝", label:"測驗"},
+  {key:"dashboard", ic:"📊", label:"儀表板"}
+];
+function renderTabbar(){
+  const bar = document.getElementById('tabbar');
+  bar.innerHTML = TABS.map(t=>'<button class="tab-btn" data-tab="'+t.key+'"><span class="ic">'+t.ic+'</span>'+t.label+'</button>').join('');
+  bar.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key = btn.dataset.tab;
+      if(key==='final-quiz'){ openLevel(5, 'quiz'); return; }
+      showScreen(key);
+    });
+  });
+}
+function setActiveTab(key){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===key));
+}
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const map = {map:'screen-map', teach:'screen-teach', vocab:'screen-vocab', level:'screen-level', dashboard:'screen-dashboard', onboard:'screen-onboard'};
+  document.getElementById(map[name]).classList.add('active');
+  setActiveTab(name);
+  if(name==='map') renderMap();
+  if(name==='teach') renderGlobalTeach();
+  if(name==='vocab') renderVocabGrid('all');
+  if(name==='dashboard') renderDashboard();
+  window.scrollTo({top:0, behavior:'instant' in window ? 'instant' : 'auto'});
+}
+
+/* ----------------------- ONBOARDING ----------------------- */
+function renderSwatches(){
+  const row = document.getElementById('swatchRow');
+  row.innerHTML = SPRITE_COLORS.map((c,i)=>'<button type="button" class="swatch'+(i===state.spriteIdx?' selected':'')+'" data-i="'+i+'" style="background:'+c.hex+'" title="'+c.name+'">🌱</button>').join('');
+  row.querySelectorAll('.swatch').forEach(sw=>{
+    sw.addEventListener('click', ()=>{
+      state.spriteIdx = parseInt(sw.dataset.i,10);
+      row.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+      sw.classList.add('selected');
+      document.querySelectorAll('#onboardSpritePreview ellipse:first-child').forEach(el=>el.setAttribute('fill', SPRITE_COLORS[state.spriteIdx].hex));
+      setSpriteColor(state.spriteIdx);
+    });
+  });
+}
+document.getElementById('btnStart').addEventListener('click', ()=>{
+  const val = document.getElementById('nameInput').value.trim();
+  state.name = val || "小嫩芽";
+  saveState();
+  markPlayedToday();
+  boot();
+});
+document.getElementById('btnSettings').addEventListener('click', ()=>{
+  showScreenRaw('onboard');
+  document.getElementById('nameInput').value = state.name;
+  renderSwatches();
+});
+function showScreenRaw(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const map = {map:'screen-map', teach:'screen-teach', vocab:'screen-vocab', level:'screen-level', dashboard:'screen-dashboard', onboard:'screen-onboard'};
+  document.getElementById(map[name]).classList.add('active');
+}
+
+/* ----------------------- MAP ----------------------- */
+function renderMap(){
+  const wrap = document.getElementById('mapPath');
+  wrap.innerHTML = LEVELS.map((lv, idx)=>{
+    const stars = state.levelStars[lv.id] || 0;
+    const starStr = '★★★☆☆☆'.slice(3-stars,6-stars); // build 3-length string
+    const starDisplay = [1,2,3].map(n=> n<=stars ? '★' : '☆').join('');
+    const rowClass = idx % 2 === 1 ? 'right' : '';
+    const connector = idx>0 ? '<div class="connector"></div>' : '';
+    return connector + '<div class="node-row '+rowClass+'">'
+      + '<button class="level-node" style="--node-color:var(--topic-'+lv.color+')" data-lv="'+lv.id+'">'
+      + '<span class="emoji">'+lv.emoji+'</span><span class="stars">'+starDisplay+'</span>'
+      + '</button>'
+      + '<div class="node-info"><div class="sub">LEVEL '+lv.id+' · '+lv.sub+'</div><h3 style="--node-color:var(--topic-'+lv.color+')">'+lv.name+'</h3><p>'+lv.blurb+'</p></div>'
+      + '</div>';
+  }).join('');
+  wrap.querySelectorAll('.level-node').forEach(btn=>{
+    btn.addEventListener('click', ()=> openLevel(parseInt(btn.dataset.lv,10)));
+  });
+}
+
+/* ----------------------- GLOBAL TEACH SCREEN ----------------------- */
+let currentGlobalTeachKey = 'dative';
+function renderGlobalTeach(){
+  const tabsEl = document.getElementById('grammarTabsGlobal');
+  tabsEl.innerHTML = Object.values(GRAMMAR).map(g=>'<button type="button" class="gtab" data-g="'+g.key+'" style="'+(g.key===currentGlobalTeachKey?('background:var(--topic-'+g.color+');border-color:var(--topic-'+g.color+')'):'')+'">'+g.name+'</button>').join('');
+  tabsEl.querySelectorAll('.gtab').forEach(t=>{
+    t.addEventListener('click', ()=>{ currentGlobalTeachKey = t.dataset.g; renderGlobalTeach(); });
+  });
+  document.getElementById('grammarContentGlobal').innerHTML = renderGrammarTeachHTML(currentGlobalTeachKey);
+}
+function renderGrammarTeachHTML(key){
+  const g = GRAMMAR[key];
+  let html = '<div class="teach-points">' + g.points.map((p,i)=>
+    '<div class="teach-point" style="--tc:var(--topic-'+g.color+')"><div class="num">'+(i+1)+'</div><div class="txt"><div class="zh">'+esc(p.zh)+'</div>'+(p.en?'<div class="en">'+esc(p.en)+'</div>':'')+'</div></div>'
+  ).join('') + '</div>';
+  html += '<div class="example-strip">' + g.examples.map(ex=>
+    '<div class="example-chip">'+spkBtn(ex.en)+'<div class="txt"><div class="en">'+esc(ex.en)+'</div>'+(ex.zh?'<div class="zh">'+esc(ex.zh)+'</div>':'')+'</div></div>'
+  ).join('') + '</div>';
+  if(g.table){
+    html += '<div class="table-wrap"><table class="gtable"><thead><tr><th>介系詞</th><th>常見授予動詞</th></tr></thead><tbody>' +
+      g.table.map(row=>'<tr><td><b>'+row[0]+'</b></td><td>'+row[1]+'</td></tr>').join('') + '</tbody></table></div>';
+  }
+  html += '<div class="tip-box">🌱<div>'+esc(g.tip)+'</div></div>';
+  return html;
+}
+
+/* ----------------------- VOCAB GARDEN ----------------------- */
+let currentVocabFilter = 'all';
+function renderVocabGrid(filter){
+  currentVocabFilter = filter || currentVocabFilter;
+  const chipsRow = document.getElementById('vocabFilterRow');
+  chipsRow.innerHTML = Object.keys(VOCAB_TOPICS).map(k=>'<button type="button" class="chip'+(k===currentVocabFilter?' active':'')+'" data-f="'+k+'">'+VOCAB_TOPICS[k]+'</button>').join('');
+  chipsRow.querySelectorAll('.chip').forEach(c=> c.addEventListener('click', ()=> renderVocabGrid(c.dataset.f)));
+  const list = currentVocabFilter==='all' ? VOCAB : VOCAB.filter(w=>w.topic===currentVocabFilter);
+  const grid = document.getElementById('vocabGrid');
+  grid.innerHTML = list.map(w=>{
+    const stat = state.wordStats[w.id];
+    let m = 'new';
+    if(stat && stat.attempts>0){ m = (stat.correct/stat.attempts>=0.8 && stat.attempts>=3) ? 'mastered' : 'learning'; }
+    return '<div class="vcard" data-id="'+w.id+'"><span class="dot '+m+'"></span>'
+      + '<span class="icon">'+w.icon+'</span>'
+      + '<span class="en">'+w.en+'</span><span class="pos">'+w.pos+'</span>'
+      + '<span class="zh">點卡片看意思</span>'
+      + '<div class="back-note"><b>'+w.zh+'</b><br>'+esc(w.ex)+'<br><span style="opacity:.8">'+esc(w.exZh)+'</span></div>'
+      + '</div>';
+  }).join('');
+  grid.querySelectorAll('.vcard').forEach(card=>{
+    card.addEventListener('click', (e)=>{
+      const id = parseInt(card.dataset.id,10);
+      const w = VOCAB.find(v=>v.id===id);
+      card.classList.toggle('flipped');
+      if(card.classList.contains('flipped')){
+        card.querySelector('.zh').textContent = w.zh;
+        speak(w.ex);
+      } else {
+        card.querySelector('.zh').textContent = '點卡片看意思';
+      }
+    });
+  });
+}
+
+/* ----------------------- LEVEL DETAIL ----------------------- */
+let currentLevel = null;
+let currentSubtab = 'teach';
+function openLevel(id, forceTab){
+  currentLevel = LEVELS.find(l=>l.id===id);
+  currentSubtab = forceTab || (currentLevel.teachType==='vocab' ? 'teach' : 'teach');
+  showScreenRaw('level'); setActiveTab('map');
+  const hero = document.getElementById('levelHero');
+  hero.style.setProperty('--lc','var(--topic-'+currentLevel.color+')');
+  document.getElementById('levelSub').textContent = 'LEVEL '+currentLevel.id+' · '+currentLevel.sub;
+  document.getElementById('levelTitle').textContent = currentLevel.emoji+' '+currentLevel.name;
+  document.getElementById('levelBlurb').textContent = currentLevel.blurb;
+  renderLevelSubtabs();
+  renderLevelContent();
+}
+document.getElementById('btnBackToMap').addEventListener('click', ()=> showScreen('map'));
+function renderLevelSubtabs(){
+  const wrap = document.getElementById('levelSubtabs');
+  const tabs = [{k:'teach',label:'📖 教學'},{k:'practice',label:'✏️ 練習'},{k:'quiz',label:'📝 測驗'}];
+  wrap.innerHTML = tabs.map(t=>'<button type="button" class="subtab'+(t.k===currentSubtab?' active':'')+'" data-k="'+t.k+'" style="'+(t.k===currentSubtab?('background:var(--topic-'+currentLevel.color+');border-color:var(--topic-'+currentLevel.color+')'):'')+'">'+t.label+'</button>').join('');
+  wrap.querySelectorAll('.subtab').forEach(b=> b.addEventListener('click', ()=>{ currentSubtab=b.dataset.k; renderLevelSubtabs(); renderLevelContent(); }));
+}
+function renderLevelContent(){
+  const el = document.getElementById('levelContent');
+  if(currentSubtab==='teach'){
+    if(currentLevel.teachType==='vocab'){
+      const words = VOCAB.filter(w=>w.topic==='body');
+      el.innerHTML = '<p class="section-sub">先認識這些身體與病痛相關的單字，再進入練習吧！</p><div class="vocab-grid">'+
+        words.map(w=>'<div class="vcard flipped" data-id="'+w.id+'"><span class="icon">'+w.icon+'</span><span class="en">'+w.en+'</span><span class="pos">'+w.pos+'</span><span class="zh">'+w.zh+'</span><div class="back-note" style="display:block">'+esc(w.ex)+'<br><span style="opacity:.8">'+esc(w.exZh)+'</span></div></div>').join('')
+        +'</div>';
+      el.querySelectorAll('.vcard').forEach(card=>{
+        card.addEventListener('click', ()=>{ const w = VOCAB.find(v=>v.id===parseInt(card.dataset.id,10)); speak(w.ex); });
+      });
+    } else if(currentLevel.teachType==='grammar'){
+      el.innerHTML = renderGrammarTeachHTML(currentLevel.grammarKey);
+    } else if(currentLevel.teachType==='summary'){
+      el.innerHTML = Object.values(GRAMMAR).map(g=>'<h3 style="margin:14px 0 6px;color:var(--topic-'+g.color+')">'+g.name+'</h3>'+renderGrammarTeachHTML(g.key)).join('<hr style="border:none;border-top:1px dashed var(--border);margin:14px 0">');
+    }
+  } else if(currentSubtab==='practice'){
+    renderSession(el, currentLevel, 'practice');
+  } else if(currentSubtab==='quiz'){
+    renderSession(el, currentLevel, 'quiz');
+  }
+}
+
+/* ----------------------- SESSION ENGINE (practice + quiz) ----------------------- */
+function renderSession(container, level, mode){
+  const pool = buildPoolForLevel(level);
+  if(pool.length===0){ container.innerHTML = '<p>目前沒有題目。</p>'; return; }
+  const isQuiz = mode==='quiz';
+  const total = isQuiz ? Math.min(level.key==='final'?12:10, pool.length) : pool.length;
+  const queue = shuffle(pool).slice(0, isQuiz ? total : pool.length);
+  const session = {mode, level, queue, idx:0, correctCount:0, review:[], colorVar:'var(--topic-'+level.color+')'};
+  container.innerHTML = '<div id="sessionIntro"></div><div id="sessionArea"></div>';
+  const intro = document.getElementById('sessionIntro');
+  if(isQuiz){
+    intro.innerHTML = '<p class="section-sub">共 '+total+' 題，答對愈多顆星愈亮！準備好就開始吧。</p><button class="btn block" id="btnBeginQuiz">開始測驗 📝</button>';
+    document.getElementById('btnBeginQuiz').addEventListener('click', ()=>{ intro.innerHTML=''; renderQuestion(session); });
+  } else {
+    intro.innerHTML = '<p class="section-sub">練習模式：可以一直練，答錯也沒關係，會有詳解幫你複習！</p>';
+    renderQuestion(session);
+  }
+}
+function renderQuestion(session){
+  markPlayedToday();
+  const area = document.getElementById('sessionArea');
+  if(session.idx >= session.queue.length){
+    if(session.mode==='quiz'){ renderQuizSummary(session); }
+    else {
+      area.innerHTML = '<div class="qcard"><p>🎉 這一輪練習都完成了！</p><button class="btn" id="btnReplay">再來一輪 🔁</button></div>';
+      document.getElementById('btnReplay').addEventListener('click', ()=> renderSession(document.getElementById('levelContent'), session.level, 'practice'));
+    }
+    return;
+  }
+  const q = session.queue[session.idx];
+  const pct = Math.round((session.idx/session.queue.length)*100);
+  let html = '<div class="progress-track"><div class="progress-fill" style="width:'+pct+'%;background:'+session.colorVar+'"></div></div>';
+  html += '<div class="qcard" style="--lc:'+session.colorVar+'">';
+  html += '<div class="qmeta"><span>'+(session.mode==='quiz'?'測驗':'練習')+' 第 '+(session.idx+1)+' / '+session.queue.length+' 題</span><span>答對 '+session.correctCount+'</span></div>';
+  html += '<div class="qprompt">'+q.promptMain+'</div>';
+  if(q.promptSub) html += '<div class="qsub">'+esc(q.promptSub)+'</div>';
+  if(q.audio) html += '<div class="qaudio-row">'+spkBtn(q.audio)+'<span style="font-size:.78rem;color:var(--muted)">點喇叭聽發音</span></div>';
+  if(q.kind==='mc'){
+    html += '<div class="opt-grid" id="optGrid">'+q.options.map((o,i)=>'<button type="button" class="opt-btn" data-i="'+i+'">'+esc(o.label)+'</button>').join('')+'</div>';
+  } else if(q.kind==='build'){
+    html += '<div class="tile-answer" id="tileAnswer"></div>';
+    html += '<div class="tile-bank" id="tileBank">'+q.tiles.map((t,i)=>'<button type="button" class="tile" data-i="'+i+'" style="--lc:'+session.colorVar+'">'+esc(t)+'</button>').join('')+'</div>';
+    html += '<div class="qactions"><button class="btn secondary small" id="btnClearTiles">清空重排</button><button class="btn small" id="btnCheckBuild" style="background:'+session.colorVar+'">送出答案 ✅</button></div>';
+  }
+  html += '<div class="feedback-box" id="feedbackBox"></div>';
+  html += '<div class="qactions" id="qNextRow"></div>';
+  html += '</div>';
+  area.innerHTML = html;
+
+  if(q.kind==='mc'){
+    document.querySelectorAll('#optGrid .opt-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const i = parseInt(btn.dataset.i,10);
+        handleAnswer(session, q, q.options[i].correct, ()=>{
+          document.querySelectorAll('#optGrid .opt-btn').forEach((b,bi)=>{
+            b.disabled = true;
+            if(q.options[bi].correct) b.classList.add('correct');
+            else if(bi===i) b.classList.add('wrong');
+          });
+        });
+      });
+    });
+  } else if(q.kind==='build'){
+    const answerEl = document.getElementById('tileAnswer');
+    const bankEl = document.getElementById('tileBank');
+    const picked = [];
+    function refreshAnswer(){
+      answerEl.innerHTML = picked.length ? picked.map((p)=>'<button type="button" class="tile ans-tile" data-i="'+p.i+'" style="--lc:'+session.colorVar+'">'+esc(p.t)+'</button>').join('') : '<span class="tile ghost">點下方字卡組成句子…</span>';
+      answerEl.querySelectorAll('.ans-tile').forEach(bt=>{
+        bt.addEventListener('click', ()=>{
+          const i = parseInt(bt.dataset.i,10);
+          const pos = picked.findIndex(p=>p.i===i);
+          if(pos>-1) picked.splice(pos,1);
+          bankEl.querySelector('[data-i="'+i+'"]').classList.remove('used');
+          refreshAnswer();
+        });
+      });
+    }
+    bankEl.querySelectorAll('.tile').forEach(bt=>{
+      bt.addEventListener('click', ()=>{
+        const i = parseInt(bt.dataset.i,10);
+        if(bt.classList.contains('used')) return;
+        bt.classList.add('used');
+        picked.push({i, t:q.tiles[i]});
+        refreshAnswer();
+      });
+    });
+    document.getElementById('btnClearTiles').addEventListener('click', ()=>{
+      picked.length = 0;
+      bankEl.querySelectorAll('.tile').forEach(b=>b.classList.remove('used'));
+      refreshAnswer();
+    });
+    document.getElementById('btnCheckBuild').addEventListener('click', ()=>{
+      const built = picked.map(p=>p.t).join(' ') + (q.appendMark || '');
+      const ok = normWords(built) === normWords(q.targetText);
+      handleAnswer(session, q, ok, ()=>{
+        document.getElementById('btnCheckBuild').disabled = true;
+        bankEl.querySelectorAll('.tile').forEach(b=> b.disabled = true);
+        document.getElementById('btnClearTiles').disabled = true;
+      });
+    });
+    refreshAnswer();
+  }
+}
+function handleAnswer(session, q, correct, disableUI){
+  disableUI();
+  if(q.statsKind==='vocab') recordVocab(q.statsKey, correct);
+  if(q.statsKind==='grammar') recordGrammar(q.statsKey, correct);
+  if(correct) session.correctCount++;
+  session.review.push({q, correct});
+  spriteReact(correct);
+  const fb = document.getElementById('feedbackBox');
+  fb.className = 'feedback-box show ' + (correct?'correct':'wrong');
+  fb.innerHTML = '<div class="head">'+(correct?'✅ 答對了！':'❌ 再想想')+'</div><div class="explain">'+q.explain+'</div>';
+  const nextRow = document.getElementById('qNextRow');
+  nextRow.innerHTML = '<button class="btn" id="btnNextQ" style="background:'+session.colorVar+'">'+(session.idx+1<session.queue.length?'下一題 →':'查看結果 🎉')+'</button>';
+  document.getElementById('btnNextQ').addEventListener('click', ()=>{ session.idx++; renderQuestion(session); });
+}
+function renderQuizSummary(session){
+  const total = session.queue.length;
+  const pct = Math.round((session.correctCount/total)*100);
+  const stars = pct>=90?3:pct>=70?2:pct>=50?1:0;
+  state.levelStars[session.level.id] = Math.max(state.levelStars[session.level.id]||0, stars);
+  state.quizHistory.push({date:new Date().toISOString(), levelId:session.level.id, levelName:session.level.name, correct:session.correctCount, total, pct});
+  if(state.quizHistory.length>40) state.quizHistory = state.quizHistory.slice(-40);
+  saveState();
+  spriteSay(SPRITE_LINES.levelDone[Math.floor(Math.random()*SPRITE_LINES.levelDone.length)], stars>=2?'happy':undefined);
+  const area = document.getElementById('sessionArea');
+  area.innerHTML = '<div class="qcard" style="text-align:center">'
+    + '<h3>測驗完成！</h3>'
+    + '<div class="summary-stars">'+[1,2,3].map(n=>'<span class="'+(n<=stars?'on':'')+'">★</span>').join('')+'</div>'
+    + '<p style="font-size:1.4rem;font-weight:800;font-family:var(--font-display)">'+session.correctCount+' / '+total+'　（'+pct+'%）</p>'
+    + '<div style="display:flex;gap:10px;justify-content:center;margin:14px 0 20px;flex-wrap:wrap">'
+    + '<button class="btn secondary" id="btnRetryQuiz">再測一次</button>'
+    + '<button class="btn" id="btnGoDash">查看儀表板 📊</button>'
+    + '</div>'
+    + '<div style="text-align:left"><h4 style="margin-bottom:8px">📋 詳解回顧</h4>'
+    + session.review.map(r=>'<div class="review-item '+(r.correct?'correct':'wrong')+'">'+(r.correct?'✅':'❌')+' '+r.q.explain+'</div>').join('')
+    + '</div></div>';
+  document.getElementById('btnRetryQuiz').addEventListener('click', ()=> renderSession(document.getElementById('levelContent'), session.level, 'quiz'));
+  document.getElementById('btnGoDash').addEventListener('click', ()=> showScreen('dashboard'));
+}
+
+/* ----------------------- DASHBOARD ----------------------- */
+function renderDashboard(){
+  document.getElementById('streakVal').textContent = computeStreak();
+  document.getElementById('starsVal').textContent = totalStars();
+
+  const wordIds = VOCAB.map(w=>w.id);
+  const learned = wordIds.filter(id=> state.wordStats[id] && state.wordStats[id].attempts>0).length;
+  const mastered = wordIds.filter(id=>{ const s=state.wordStats[id]; return s && s.attempts>=3 && s.correct/s.attempts>=0.8; }).length;
+  const levelsCleared = Object.values(state.levelStars).filter(s=>s>0).length;
+  let totalAttempts=0, totalCorrect=0;
+  Object.values(state.wordStats).forEach(s=>{ totalAttempts+=s.attempts; totalCorrect+=s.correct; });
+  Object.values(state.grammarStats).forEach(s=>{ totalAttempts+=s.attempts; totalCorrect+=s.correct; });
+  const overallAcc = totalAttempts>0 ? Math.round(totalCorrect/totalAttempts*100) : 0;
+
+  const stats = [
+    {val: learned+'/42', lbl:'已學單字'},
+    {val: mastered, lbl:'精熟單字'},
+    {val: levelsCleared+'/5', lbl:'通關關卡'},
+    {val: overallAcc+'%', lbl:'整體正確率'},
+    {val: totalAttempts, lbl:'累計練習題數'}
+  ];
+  document.getElementById('statRow').innerHTML = stats.map(s=>'<div class="stat-tile"><div class="val">'+s.val+'</div><div class="lbl">'+s.lbl+'</div></div>').join('');
+
+  const greetEl = document.getElementById('dashGreeting');
+  if(totalAttempts===0){ greetEl.textContent = '還沒有練習紀錄，快去闖關累積你的第一筆成績吧！'; }
+  else {
+    const cats = [
+      {key:'vocab', name:'單字', acc: computeVocabAcc()},
+      {key:'dative', name:'授予動詞', acc: computeGrammarAcc('dative')},
+      {key:'why', name:'why 疑問句', acc: computeGrammarAcc('why')},
+      {key:'becauseso', name:'because · so', acc: computeGrammarAcc('becauseso')}
+    ].filter(c=>c.acc!==null);
+    if(cats.length){
+      const weakest = cats.reduce((a,b)=> a.acc<=b.acc?a:b);
+      greetEl.textContent = '目前整體正確率 '+overallAcc+'%。「'+weakest.name+'」正確率較低（'+weakest.acc+'%），要不要再去複習一下？';
+    }
+  }
+
+  renderBarChart();
+  renderLineChart();
+  renderMasteryGrid();
+}
+function computeVocabAcc(){
+  let a=0,c=0; Object.values(state.wordStats).forEach(s=>{a+=s.attempts;c+=s.correct;});
+  return a>0 ? Math.round(c/a*100) : null;
+}
+function computeGrammarAcc(key){
+  const s = state.grammarStats[key];
+  return (s && s.attempts>0) ? Math.round(s.correct/s.attempts*100) : null;
+}
+function renderBarChart(){
+  const data = [
+    {name:'單字', key:'vocab', color:'var(--topic-vocab)', acc: computeVocabAcc()},
+    {name:'授予動詞', key:'dative', color:'var(--topic-dative)', acc: computeGrammarAcc('dative')},
+    {name:'why 疑問句', key:'why', color:'var(--topic-why)', acc: computeGrammarAcc('why')},
+    {name:'because·so', key:'becauseso', color:'var(--topic-becauseso)', acc: computeGrammarAcc('becauseso')}
+  ];
+  const w = 560, rowH = 44, padL = 96, padR = 46, chartW = w-padL-padR;
+  const h = data.length*rowH + 20;
+  let svg = '<svg viewBox="0 0 '+w+' '+h+'" width="100%" style="max-width:'+w+'px;overflow:visible" role="img" aria-label="各主題正確率長條圖">';
+  [0,25,50,75,100].forEach(g=>{
+    const x = padL + chartW*g/100;
+    svg += '<line x1="'+x+'" y1="6" x2="'+x+'" y2="'+(h-14)+'" stroke="var(--border)" stroke-width="1"/>';
+    svg += '<text x="'+x+'" y="'+(h-2)+'" font-size="10" fill="var(--muted)" text-anchor="middle">'+g+'%</text>';
+  });
+  data.forEach((d,i)=>{
+    const y = 14 + i*rowH;
+    const val = d.acc===null?0:d.acc;
+    const barW = chartW*val/100;
+    svg += '<text x="'+(padL-10)+'" y="'+(y+14)+'" font-size="12" fill="var(--ink)" text-anchor="end" font-weight="700">'+d.name+'</text>';
+    svg += '<rect x="'+padL+'" y="'+y+'" width="'+chartW+'" height="20" rx="10" fill="var(--surface-2)"/>';
+    if(d.acc!==null){
+      svg += '<rect x="'+padL+'" y="'+y+'" width="'+Math.max(barW,4)+'" height="20" rx="10" fill="'+d.color+'"/>';
+      svg += '<text x="'+(padL+barW+8)+'" y="'+(y+14)+'" font-size="11" fill="var(--ink)" font-weight="800">'+val+'%</text>';
+    } else {
+      svg += '<text x="'+(padL+8)+'" y="'+(y+14)+'" font-size="11" fill="var(--muted)">尚未練習</text>';
+    }
+  });
+  svg += '</svg>';
+  document.getElementById('barChart').innerHTML = svg + '<div class="legend-row">'+data.map(d=>'<span><span class="sw" style="background:'+d.color+'"></span>'+d.name+'</span>').join('')+'</div>';
+}
+function renderLineChart(){
+  const holder = document.getElementById('lineChart');
+  const hist = state.quizHistory.slice(-10);
+  if(hist.length===0){ holder.innerHTML = '<p style="color:var(--muted);font-size:.85rem">還沒有測驗紀錄，完成一次「測驗模式」後這裡會出現分數趨勢。</p>'; return; }
+  const w = 560, h = 200, padL = 34, padR = 16, padT = 16, padB = 26;
+  const chartW = w-padL-padR, chartH = h-padT-padB;
+  const pts = hist.map((r,i)=>{
+    const x = hist.length===1 ? padL+chartW/2 : padL + chartW*i/(hist.length-1);
+    const y = padT + chartH*(1 - r.pct/100);
+    return {x,y,r,i};
+  });
+  let svg = '<svg viewBox="0 0 '+w+' '+h+'" width="100%" style="max-width:'+w+'px" role="img" aria-label="測驗分數歷程折線圖">';
+  [0,50,100].forEach(g=>{
+    const y = padT + chartH*(1-g/100);
+    svg += '<line x1="'+padL+'" y1="'+y+'" x2="'+(w-padR)+'" y2="'+y+'" stroke="var(--border)" stroke-width="1"/>';
+    svg += '<text x="'+(padL-8)+'" y="'+(y+3)+'" font-size="10" fill="var(--muted)" text-anchor="end">'+g+'</text>';
+  });
+  const areaPath = 'M'+pts.map(p=>p.x+','+p.y).join(' L') + ' L'+pts[pts.length-1].x+','+(padT+chartH)+' L'+pts[0].x+','+(padT+chartH)+' Z';
+  svg += '<path d="'+areaPath+'" fill="var(--topic-dative)" opacity="0.14"/>';
+  const linePath = 'M'+pts.map(p=>p.x+','+p.y).join(' L');
+  svg += '<path d="'+linePath+'" fill="none" stroke="var(--topic-dative)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
+  pts.forEach((p,i)=>{
+    const isLast = i===pts.length-1;
+    svg += '<circle class="pt" data-i="'+i+'" cx="'+p.x+'" cy="'+p.y+'" r="'+(isLast?6:4.5)+'" fill="var(--topic-dative)" stroke="var(--surface)" stroke-width="2" style="cursor:pointer"/>';
+  });
+  svg += '</svg>';
+  holder.innerHTML = svg;
+  const tooltip = document.getElementById('chartTooltip');
+  holder.querySelectorAll('circle.pt').forEach(c=>{
+    const p = pts[parseInt(c.dataset.i,10)];
+    c.addEventListener('mousemove', (e)=>{
+      tooltip.style.opacity = 1;
+      tooltip.textContent = p.r.levelName+'：'+p.r.correct+'/'+p.r.total+'（'+p.r.pct+'%）';
+      tooltip.style.left = (e.pageX+12)+'px';
+      tooltip.style.top = (e.pageY-30)+'px';
+    });
+    c.addEventListener('mouseleave', ()=>{ tooltip.style.opacity = 0; });
+  });
+}
+function renderMasteryGrid(){
+  const grid = document.getElementById('masteryGrid');
+  grid.innerHTML = VOCAB.map(w=>{
+    const s = state.wordStats[w.id];
+    let m = 'new';
+    if(s && s.attempts>0){ m = (s.attempts>=3 && s.correct/s.attempts>=0.8) ? 'mastered' : 'learning'; }
+    return '<div class="mtile" data-m="'+m+'" title="'+w.en+' '+w.zh+'">'+w.icon+'</div>';
+  }).join('');
+}
+
+/* ----------------------- LEVEL CLICK FROM ANYWHERE ----------------------- */
+window.speak = speak; // used by inline onclick handlers
+
+/* ----------------------- BOOT ----------------------- */
+function boot(){
+  renderTabbar();
+  setSpriteColor(state.spriteIdx);
+  if(!state.name){
+    renderSwatches();
+    showScreenRaw('onboard');
+  } else {
+    showScreen('map');
+    setTimeout(()=> spriteSay('嗨，'+state.name+'！歡迎回到嫩芽森林 🌱', 'happy'), 500);
+  }
+}
+document.addEventListener('DOMContentLoaded', boot);
+if(document.readyState==='interactive' || document.readyState==='complete'){ boot(); }
+</script>
+</body>
+</html>
